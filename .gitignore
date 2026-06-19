@@ -25,3 +25,5 @@ env/
 .DS_Store
 .vscode/
 .idea/
+notebooks/Comparaison_des_clusters.ipynb
+docs/02_comparaison_cluster.md
