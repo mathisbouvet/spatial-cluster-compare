@@ -1,0 +1,27 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environnements
+.venv/
+venv/
+env/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Données (à ne pas committer)
+*.csv
+!tests/**/*.csv
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
