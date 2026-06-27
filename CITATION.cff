@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "spatial-cluster-compare"
+abstract: >-
+  Automated clustering algorithm comparison pipeline for spatial proteomics,
+  cytometry data, or any numerical feature table. Runs several clustering
+  algorithms on the same data, scores each one on multiple complementary
+  metrics (including bootstrap stability), and selects the best method
+  through a transparent, reproducible composite score.
+authors:
+  - family-names: "Bouvet"
+    given-names: "Mathis"
+    affiliation: "Institut de la Vision, Paris"
+repository-code: "https://github.com/mathisbouvet/spatial-cluster-compare"
+url: "https://pypi.org/project/spatial-cluster-compare/"
+version: 0.1.2
+date-released: "2026-06-19"
+license: MIT
+keywords:
+  - bioinformatics
+  - clustering
+  - single-cell
+  - spatial-proteomics
