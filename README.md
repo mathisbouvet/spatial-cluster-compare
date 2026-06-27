@@ -7,21 +7,19 @@
 Automated clustering algorithm comparison pipeline for spatial proteomics,
 cytometry data, or any numerical feature table.
 
-Originally an analysis notebook (`Comparaison_des_clusters.ipynb`), restructured
+Originally an analysis notebook, restructured into a tested, reusable Python package.
 
 <img src="assets/figure_1.png" width="500">
 
 ## Table of contents
 
 - [Why this package](#why-this-package)
-- [Two ways to use this repo](#two-ways-to-use-this-repo)
+- [Part of MACSima_Spatial-Omics-Pipeline](#part-of-macsima_spatial-omics-pipeline)
 - [What the pipeline does](#what-the-pipeline-does)
-- [Expected data format](#expected-data-format)
-- [Requirements](#requirements)
 - [Installation](#installation)
 - [Quick usage](#quick-usage)
 - [Advanced usage (step by step)](#advanced-usage-step-by-step)
-- [Fix applied compared to the original notebook](#fix-applied-compared-to-the-original-notebook)
+- [Expected data format](#expected-data-format)
 - [Roadmap](#roadmap)
 
 ## Why this package
@@ -29,7 +27,7 @@ Originally an analysis notebook (`Comparaison_des_clusters.ipynb`), restructured
 Choosing a clustering algorithm is often an arbitrary decision: KMeans gets
 picked by default, parameters get tuned until the result "looks right," and
 the choice is rarely backed by an objective comparison. For biological data in
-particular — where clusters are expected to reflect real cell populations —
+particular where clusters are expected to reflect real cell populations
 this matters: the wrong algorithm or the wrong number of clusters can produce
 plausible-looking but biologically meaningless groups.
 
@@ -39,16 +37,17 @@ stability, not just a single internal index), and picks the best method
 through a transparent, reproducible composite score — instead of relying on a
 single, unverified default choice.
 
-## Two ways to use this repo
+## Part of MACSima_Spatial-Omics-Pipeline
 
-- **`notebooks/Comparaison_des_clusters.ipynb`**: the full pipeline as a
-  standalone notebook, no dependency on the package — handy for copy-pasting
-  the code directly into your own environment without installing the library.
-- **`spatial_cluster_compare` (the package)**: the same logic packaged into
-  reusable, tested functions, installable via `pip`.
+`spatial-cluster-compare` is one of the packages of
+[**MACSima_Spatial-Omics-Pipeline**](https://github.com/mathisbouvet/MACSima_Spatial-Omics-Pipeline),
+which centralizes the protocols (detailed, step-by-step documentation) and
+notebooks (original, standalone analyses) for the whole pipeline.
 
-Detailed step-by-step documentation (formulas, biological rationale for each
-step) is available in [`docs/02_comparaison_cluster.md`](docs/02_comparaison_cluster.md).
+| Resource | Link |
+|---|---|
+| Protocol (detailed documentation, data format, formulas) | [`protocols/02_spatial_cluster_compare.md`](https://github.com/mathisbouvet/MACSima_Spatial-Omics-Pipeline/blob/main/protocols/02_spatial_cluster_compare.md) |
+| Original notebook | [`notebooks/cluster/02_spatial_cluster_compare.ipynb`](https://github.com/mathisbouvet/MACSima_Spatial-Omics-Pipeline/blob/main/notebooks/cluster/02_spatial_cluster_compare.ipynb) |
 
 ## What the pipeline does
 
@@ -61,56 +60,14 @@ step) is available in [`docs/02_comparaison_cluster.md`](docs/02_comparaison_clu
 7. **Automatic selection of the best method** based on a normalized composite score
 8. **Visualizations**: comparative bar chart of metrics, mean-expression heatmap per cluster
 
-<img src="assets/figure_2.png" width="500">
-
-## Expected data format
-
-### Export from MACSiQView
-
-In MACSiQView, the **"Feature Table"** tab lets you select which descriptors
-to include before exporting to `.csv`. For this clustering pipeline (unlike
-the morphological segmentation QC described in `macsima-qc`, which excludes
-fluorescence intensities), you should instead select the **biomarker
-intensity columns** (e.g. `CD8 Biomarker Exp`, `CD74 Biomarker Exp`), along
-with morphological descriptors (`Cell Size`...) if you want them included in
-the clustering.
-
-### CSV structure
-
-- **One row per cell**, one column per marker/descriptor.
-- Numeric columns (`float64`/`int64`) are automatically used as clustering
-  features via `select_dtypes` — no need to specify them manually.
-- Non-numeric columns (ID, ROI name, text metadata) are automatically ignored
-  and don't need to be dropped beforehand.
-- **Caution**: if a numeric column isn't a biological marker (e.g. an integer
-  `Cell_ID`, X/Y centroid coordinates), it will still be wrongly included in
-  the clustering. In that case, drop it explicitly before calling
-  `compare_clusters`, e.g.:
-  ```python
-  data = data.drop(columns=["Cell_ID", "Centroid X", "Centroid Y"])
-  ```
-- Stray whitespace in column names: MACSiQView can generate leading/trailing
-  spaces in column names. Clean them up if needed
-  (`data.columns = data.columns.str.strip()`), as in the segmentation QC
-  protocol.
-- **Missing values (NaN)**: not handled automatically by the pipeline. Clean
-  them up beforehand (`data.dropna()`) or impute if some cells have missing
-  values on one or more markers.
-- **Dataset size**: plan for at least a few hundred cells so that the Hopkins
-  statistic and the stability bootstrap (ARI) are reliable. Spectral
-  Clustering can become slow beyond ~10-20k rows.
-
-## Requirements
-
-- Python 3.9+
-- `numpy`, `pandas`
-- `scikit-learn`
-- `scipy`
-- `matplotlib` / `seaborn` (for the comparison bar chart and heatmap)
-
-All dependencies are installed automatically with `pip install`.
+<p align="center">
+  <img src="assets/figure_2.png" width="500">
+</p>
 
 ## Installation
+
+- Python 3.9+
+- Dependencies (`numpy`, `pandas`, `scikit-learn`, `scipy`, `matplotlib`, `seaborn`) are installed automatically.
 
 ```bash
 pip install spatial-cluster-compare
@@ -123,6 +80,8 @@ pip install -e .
 ```
 
 ## Quick usage
+
+The fastest way to get a result: load your data, run the full comparison, plot it.
 
 ```python
 import pandas as pd
@@ -139,6 +98,8 @@ plot_cluster_heatmap(result.X_original, result.best_labels, method_name=result.b
 ```
 
 ## Advanced usage (step by step)
+
+For control over each stage of the pipeline (scaling, PCA, choice of k, benchmark) instead of the single `compare_clusters` call above:
 
 ```python
 from spatial_cluster_compare import (
@@ -158,13 +119,25 @@ results_df, labels_per_method = run_benchmark(X_reduced, optimal_k=optimal_k)
 best_method, best_labels = select_best_method(results_df, labels_per_method)
 ```
 
-## Fix applied compared to the original notebook
+## Expected data format
 
-The original notebook referenced `best_labels` and `best_method` in the
-heatmap cell without ever defining them explicitly. The `select_best_method`
-function fixes this by computing a normalized composite score (Silhouette ↑,
-Davies-Bouldin ↓ inverted, Calinski-Harabasz ↑, ARI stability ↑) to
-objectively designate the best method.
+- **One row per cell**, one column per marker/descriptor. Numeric columns are
+  used automatically as clustering features; non-numeric columns (ID, ROI
+  name...) are ignored automatically.
+- **Drop non-biological numeric columns** before calling `compare_clusters`
+  (e.g. `Cell_ID`, centroid coordinates), or they'll be wrongly included:
+  ```python
+  data = data.drop(columns=["Cell_ID", "Centroid X", "Centroid Y"])
+  ```
+- **Missing values (NaN)** aren't handled automatically — clean (`data.dropna()`)
+  or impute beforehand.
+- **Dataset size**: plan for at least a few hundred cells for a reliable
+  Hopkins statistic and ARI bootstrap. Spectral Clustering can get slow
+  beyond ~10-20k rows.
+
+Full details (MACSiQView export settings, column naming pitfalls, biological
+rationale for each step) are in the
+[protocol](https://github.com/mathisbouvet/MACSima_Spatial-Omics-Pipeline/blob/main/protocols/02_spatial_cluster_compare.md).
 
 ## Roadmap
 
